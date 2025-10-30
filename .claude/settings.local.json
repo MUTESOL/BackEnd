@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/harfi/Documents/Project/StackSave - Mobile/backend/**)",
+      "Read(//c/Users/harfi/Documents/Project/MUTESOL/sc-solana/**)",
+      "Bash(test:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
