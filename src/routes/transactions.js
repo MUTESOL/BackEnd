@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const blockchainService = require("../services/blockchain");
+const { validateAmount, validateCurrencyId } = require("../utils/validation");
 const {
   buildDepositTx,
   buildWithdrawCompletedTx,
@@ -31,10 +32,21 @@ router.post("/deposit", async (req, res) => {
       });
     }
 
-    if (amount <= 0) {
+    // Validate amount
+    const amountValidation = validateAmount(amount);
+    if (!amountValidation.valid) {
       return res.status(400).json({
         error: "Invalid amount",
-        message: "Amount must be greater than 0",
+        message: amountValidation.error,
+      });
+    }
+
+    // Validate currency ID
+    const currencyValidation = validateCurrencyId(currencyId);
+    if (!currencyValidation.valid) {
+      return res.status(400).json({
+        error: "Invalid currency",
+        message: currencyValidation.error,
       });
     }
 

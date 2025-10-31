@@ -87,7 +87,82 @@ function validateSolanaAddress(address) {
   }
 }
 
+/**
+ * Validate numeric amount for Solana u64
+ * @param {string|number} amount - The amount to validate
+ * @returns {object} - { valid: boolean, error?: string }
+ */
+function validateAmount(amount) {
+  if (amount === undefined || amount === null || amount === "") {
+    return {
+      valid: false,
+      error: "Amount is required",
+    };
+  }
+
+  // Convert to string for BigInt
+  const amountStr = amount.toString();
+
+  // Check if it's a valid number
+  if (!/^\d+$/.test(amountStr)) {
+    return {
+      valid: false,
+      error: "Amount must be a positive integer",
+    };
+  }
+
+  try {
+    const amountBigInt = BigInt(amountStr);
+
+    // Check if negative (shouldn't happen with regex but double check)
+    if (amountBigInt < 0n) {
+      return {
+        valid: false,
+        error: "Amount must be positive",
+      };
+    }
+
+    // Check if within u64 range
+    const MAX_U64 = BigInt("18446744073709551615");
+    if (amountBigInt > MAX_U64) {
+      return {
+        valid: false,
+        error: "Amount exceeds maximum allowed value (u64 max)",
+      };
+    }
+
+    return {
+      valid: true,
+      value: amountStr,
+    };
+  } catch (error) {
+    return {
+      valid: false,
+      error: "Invalid amount format",
+    };
+  }
+}
+
+/**
+ * Validate currency ID
+ * @param {number} currencyId - The currency ID
+ * @returns {object} - { valid: boolean, error?: string }
+ */
+function validateCurrencyId(currencyId) {
+  if (currencyId !== 0 && currencyId !== 1) {
+    return {
+      valid: false,
+      error: "Invalid currency ID. Must be 0 (USDC) or 1 (IDRX)",
+    };
+  }
+  return {
+    valid: true,
+  };
+}
+
 module.exports = {
   isValidSolanaAddress,
   validateSolanaAddress,
+  validateAmount,
+  validateCurrencyId,
 };

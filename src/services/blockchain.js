@@ -131,11 +131,15 @@ class BlockchainService {
         ? new PublicKey(userWallet)
         : userWallet;
 
+      // Convert goal index to u64 little-endian bytes (8 bytes) to match Rust .to_le_bytes()
+      const goalIndexBuffer = Buffer.alloc(8);
+      goalIndexBuffer.writeBigUInt64LE(BigInt(goalIndex));
+
       const [pda] = PublicKey.findProgramAddressSync(
         [
           Buffer.from("goal"),
           walletPubkey.toBuffer(),
-          Buffer.from([goalIndex]),
+          goalIndexBuffer,
         ],
         this.programId
       );
