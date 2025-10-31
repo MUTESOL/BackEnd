@@ -4,6 +4,7 @@ const cors = require("cors");
 const blockchainService = require("./src/services/blockchain");
 const db = require("./src/config/db");
 const { errorHandler, notFoundHandler } = require("./src/middleware/errorHandler");
+const { verifyWalletSignature } = require("./src/middleware/authMiddleware");
 
 // Import routes
 const usersRoutes = require("./src/routes/users");
@@ -97,11 +98,12 @@ app.get("/health", async (req, res) => {
 });
 
 // ==========================================
-// API Routes
+// API Routes (with authentication)
 // ==========================================
-app.use("/api/users", usersRoutes);
-app.use("/api/goals", goalsRoutes);
-app.use("/api/transactions", transactionsRoutes);
+// Apply wallet signature authentication to all protected routes
+app.use("/api/users", verifyWalletSignature, usersRoutes);
+app.use("/api/goals", verifyWalletSignature, goalsRoutes);
+app.use("/api/transactions", verifyWalletSignature, transactionsRoutes);
 
 // Legacy endpoint for backwards compatibility
 app.get("/balance/:address", async (req, res) => {
