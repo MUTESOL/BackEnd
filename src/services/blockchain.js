@@ -107,34 +107,42 @@ class BlockchainService {
    * Get the user account PDA for a wallet address
    */
   getUserAccountPDA(userWallet) {
-    const walletPubkey = typeof userWallet === "string"
-      ? new PublicKey(userWallet)
-      : userWallet;
+    try {
+      const walletPubkey = typeof userWallet === "string"
+        ? new PublicKey(userWallet)
+        : userWallet;
 
-    const [pda] = PublicKey.findProgramAddressSync(
-      [Buffer.from("user"), walletPubkey.toBuffer()],
-      this.programId
-    );
-    return pda;
+      const [pda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("user"), walletPubkey.toBuffer()],
+        this.programId
+      );
+      return pda;
+    } catch (error) {
+      throw new Error(`Invalid wallet address format: ${error.message}`);
+    }
   }
 
   /**
    * Get the goal account PDA for a user and goal index
    */
   getGoalAccountPDA(userWallet, goalIndex) {
-    const walletPubkey = typeof userWallet === "string"
-      ? new PublicKey(userWallet)
-      : userWallet;
+    try {
+      const walletPubkey = typeof userWallet === "string"
+        ? new PublicKey(userWallet)
+        : userWallet;
 
-    const [pda] = PublicKey.findProgramAddressSync(
-      [
-        Buffer.from("goal"),
-        walletPubkey.toBuffer(),
-        Buffer.from([goalIndex]),
-      ],
-      this.programId
-    );
-    return pda;
+      const [pda] = PublicKey.findProgramAddressSync(
+        [
+          Buffer.from("goal"),
+          walletPubkey.toBuffer(),
+          Buffer.from([goalIndex]),
+        ],
+        this.programId
+      );
+      return pda;
+    } catch (error) {
+      throw new Error(`Invalid wallet address format: ${error.message}`);
+    }
   }
 
   /**
@@ -152,15 +160,19 @@ class BlockchainService {
    * Get the user faucet account PDA
    */
   getUserFaucetAccountPDA(userWallet) {
-    const walletPubkey = typeof userWallet === "string"
-      ? new PublicKey(userWallet)
-      : userWallet;
+    try {
+      const walletPubkey = typeof userWallet === "string"
+        ? new PublicKey(userWallet)
+        : userWallet;
 
-    const [pda] = PublicKey.findProgramAddressSync(
-      [Buffer.from("user_faucet"), walletPubkey.toBuffer()],
-      this.programId
-    );
-    return pda;
+      const [pda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("user_faucet"), walletPubkey.toBuffer()],
+        this.programId
+      );
+      return pda;
+    } catch (error) {
+      throw new Error(`Invalid wallet address format: ${error.message}`);
+    }
   }
 
   /**
@@ -372,6 +384,9 @@ class BlockchainService {
       const balance = await this.connection.getBalance(publicKey);
       return balance / 1e9; // Convert lamports to SOL
     } catch (error) {
+      if (error.message && error.message.includes("base58")) {
+        throw new Error(`Invalid wallet address format: ${error.message}`);
+      }
       console.error("Error fetching balance:", error);
       throw error;
     }

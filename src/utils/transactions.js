@@ -23,6 +23,7 @@ const CURRENCY_IDS = {
 async function buildInitializeUserTx(userWallet) {
   try {
     const program = blockchainService.getProgram();
+    const connection = blockchainService.getConnection();
     const userPubkey = new PublicKey(userWallet);
     const userAccountPDA = blockchainService.getUserAccountPDA(userPubkey);
 
@@ -34,6 +35,11 @@ async function buildInitializeUserTx(userWallet) {
         systemProgram: SystemProgram.programId,
       })
       .transaction();
+
+    // Fetch recent blockhash and set transaction properties
+    const { blockhash } = await connection.getLatestBlockhash();
+    tx.recentBlockhash = blockhash;
+    tx.feePayer = userPubkey;
 
     return {
       transaction: tx,
@@ -115,6 +121,12 @@ async function buildCreateGoalTx(params) {
       })
       .transaction();
 
+    // Fetch recent blockhash and set transaction properties
+    const connection = blockchainService.getConnection();
+    const { blockhash } = await connection.getLatestBlockhash();
+    tx.recentBlockhash = blockhash;
+    tx.feePayer = userPubkey;
+
     return {
       transaction: tx,
       goalAccount: goalAccountPDA.toString(),
@@ -177,6 +189,12 @@ async function buildDepositTx(params) {
         systemProgram: SystemProgram.programId,
       })
       .transaction();
+
+    // Fetch recent blockhash and set transaction properties
+    const connection = blockchainService.getConnection();
+    const { blockhash } = await connection.getLatestBlockhash();
+    tx.recentBlockhash = blockhash;
+    tx.feePayer = userPubkey;
 
     return {
       transaction: tx,
@@ -257,6 +275,12 @@ async function buildWithdrawCompletedTx(params) {
         tokenProgram: TOKEN_PROGRAM_ID,
       })
       .transaction();
+
+    // Fetch recent blockhash and set transaction properties
+    const connection = blockchainService.getConnection();
+    const { blockhash } = await connection.getLatestBlockhash();
+    tx.recentBlockhash = blockhash;
+    tx.feePayer = userPubkey;
 
     const totalAmount = parseInt(goal.currentAmount) + parseInt(goal.accruedInterest);
 
@@ -347,6 +371,12 @@ async function buildWithdrawEarlyTx(params) {
       })
       .transaction();
 
+    // Fetch recent blockhash and set transaction properties
+    const connection = blockchainService.getConnection();
+    const { blockhash } = await connection.getLatestBlockhash();
+    tx.recentBlockhash = blockhash;
+    tx.feePayer = userPubkey;
+
     // Calculate penalty (2%)
     const totalAmount = parseInt(goal.currentAmount) + parseInt(goal.accruedInterest);
     const penalty = Math.floor(totalAmount * 0.02); // 2% penalty
@@ -412,6 +442,12 @@ async function buildClaimFaucetTx(params) {
         systemProgram: SystemProgram.programId,
       })
       .transaction();
+
+    // Fetch recent blockhash and set transaction properties
+    const connection = blockchainService.getConnection();
+    const { blockhash } = await connection.getLatestBlockhash();
+    tx.recentBlockhash = blockhash;
+    tx.feePayer = userPubkey;
 
     return {
       transaction: tx,

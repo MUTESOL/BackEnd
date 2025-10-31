@@ -60,16 +60,20 @@ app.get("/health", async (req, res) => {
     // Check blockchain connection
     const blockchainHealthy = blockchainService.initialized;
 
-    // Check database connection
+    // Check database connection (optional - with 2 second timeout)
     let databaseHealthy = false;
     try {
-      await db.query("SELECT 1");
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Database timeout")), 2000)
+      );
+      await Promise.race([db.query("SELECT 1"), timeoutPromise]);
       databaseHealthy = true;
     } catch (error) {
       console.error("Database health check failed:", error.message);
     }
 
-    const isHealthy = blockchainHealthy && databaseHealthy;
+    // Database is optional - only blockchain needs to be healthy
+    const isHealthy = blockchainHealthy;
 
     res.status(isHealthy ? 200 : 503).json({
       status: isHealthy ? "healthy" : "unhealthy",

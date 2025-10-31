@@ -2,6 +2,50 @@ const express = require("express");
 const router = express.Router();
 const blockchainService = require("../services/blockchain");
 const { buildInitializeUserTx } = require("../utils/transactions");
+const { validateSolanaAddress } = require("../utils/validation");
+
+/**
+ * Middleware to validate wallet address from route params
+ */
+function validateAddressParam(req, res, next) {
+  const { address } = req.params;
+  const validation = validateSolanaAddress(address);
+
+  if (!validation.valid) {
+    return res.status(400).json({
+      error: "Invalid wallet address",
+      message: validation.error,
+      suggestion: validation.suggestion,
+      receivedAddress: address,
+    });
+  }
+
+  next();
+}
+
+/**
+ * GET /api/users/validate/:address
+ * Validate if an address is a valid Solana wallet address
+ */
+router.get("/validate/:address", (req, res) => {
+  const { address } = req.params;
+  const validation = validateSolanaAddress(address);
+
+  if (validation.valid) {
+    res.json({
+      valid: true,
+      address,
+      message: "Valid Solana wallet address",
+    });
+  } else {
+    res.status(400).json({
+      valid: false,
+      address,
+      error: validation.error,
+      suggestion: validation.suggestion,
+    });
+  }
+});
 
 /**
  * POST /api/users/initialize
@@ -15,6 +59,16 @@ router.post("/initialize", async (req, res) => {
       return res.status(400).json({
         error: "Missing required field",
         message: "walletAddress is required",
+      });
+    }
+
+    // Validate wallet address
+    const validation = validateSolanaAddress(walletAddress);
+    if (!validation.valid) {
+      return res.status(400).json({
+        error: "Invalid wallet address",
+        message: validation.error,
+        suggestion: validation.suggestion,
       });
     }
 
@@ -60,7 +114,7 @@ router.post("/initialize", async (req, res) => {
  * GET /api/users/:address
  * Get user account information
  */
-router.get("/:address", async (req, res) => {
+router.get("/:address", validateAddressParam, async (req, res) => {
   try {
     const { address } = req.params;
 
@@ -90,7 +144,7 @@ router.get("/:address", async (req, res) => {
  * GET /api/users/:address/stats
  * Get comprehensive user statistics including goals
  */
-router.get("/:address/stats", async (req, res) => {
+router.get("/:address/stats", validateAddressParam, async (req, res) => {
   try {
     const { address } = req.params;
 
@@ -143,7 +197,7 @@ router.get("/:address/stats", async (req, res) => {
  * GET /api/users/:address/balance
  * Get SOL balance for a wallet (convenience endpoint)
  */
-router.get("/:address/balance", async (req, res) => {
+router.get("/:address/balance", validateAddressParam, async (req, res) => {
   try {
     const { address } = req.params;
 
